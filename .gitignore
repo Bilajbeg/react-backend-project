@@ -1,0 +1,10 @@
+# backend
+backend/node_modules/
+backend/uploads/
+backend/data.sqlite
+
+# frontend
+frontend/node_modules/
+
+# environment
+.env
