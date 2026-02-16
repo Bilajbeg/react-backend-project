@@ -6,5 +6,8 @@ backend/data.sqlite
 # frontend
 frontend/node_modules/
 
+#Jetbrains
+.idea/
+
 # environment
 .env
