@@ -35,11 +35,11 @@ const photos = [
         title: "Portrait Mood",
         category: "Menschen",
         year: "2025",
-        src: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1600&q=80",
+        src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1600&q=80",
         sizes: {
-            small: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=2048&q=80",
+            small: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=640&q=80",
+            medium: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1280&q=80",
+            large: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=2048&q=80",
         },
     },
     {
@@ -71,11 +71,11 @@ const photos = [
         title: "Art Abstract",
         category: "Kunst",
         year: "2025",
-        src: "https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=1600&q=80",
+        src: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1600&q=80",
         sizes: {
-            small: "https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=2048&q=80",
+            small: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=640&q=80",
+            medium: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1280&q=80",
+            large: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=2048&q=80",
         },
     },
 ];
