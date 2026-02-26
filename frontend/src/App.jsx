@@ -1,88 +1,30 @@
-import { useMemo, useState } from "react";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
+import { useEffect, useMemo, useState } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+
+import PublicLayout from "./layouts/PublicLayout";
+import AdminLayout from "./layouts/AdminLayout";
+
 import GalleryGrid from "./components/GalleryGrid";
 import PhotoModal from "./components/PhotoModal";
-import Footer from "./components/Footer";
 
-const photos = [
-    {
-        id: 1,
-        title: "Nature Road",
-        category: "Natur",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-    {
-        id: 2,
-        title: "City Geometry",
-        category: "Architektur",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-    {
-        id: 3,
-        title: "Portrait Mood",
-        category: "Menschen",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-    {
-        id: 4,
-        title: "Wildlife",
-        category: "Tiere",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-    {
-        id: 5,
-        title: "Tech Geometry",
-        category: "Technik",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-    {
-        id: 6,
-        title: "Art Abstract",
-        category: "Kunst",
-        year: "2025",
-        src: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1600&q=80",
-        sizes: {
-            small: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=640&q=80",
-            medium: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=1280&q=80",
-            large: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=2048&q=80",
-        },
-    },
-];
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
+    const navigate = useNavigate();
+
+    // Photos
+    const [photos, setPhotos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [sortOrder, setSortOrder] = useState("newest"); // "newest" | "oldest"
+
+    // Gallery UI
     const [selected, setSelected] = useState(null);
     const [activeCategory, setActiveCategory] = useState("Alle");
+
+    // Auth (Session)
+    const [authLoading, setAuthLoading] = useState(true);
+    const [isAdminAuthed, setIsAdminAuthed] = useState(false);
 
     const categories = useMemo(
         () => ["Alle", "Natur", "Architektur", "Menschen", "Tiere", "Technik", "Kunst"],
@@ -90,28 +32,133 @@ export default function App() {
     );
 
     const filteredPhotos = useMemo(() => {
-        if (activeCategory === "Alle") return photos;
-        return photos.filter((p) => p.category === activeCategory);
-    }, [activeCategory]);
+        const base = activeCategory === "Alle"
+            ? photos
+            : photos.filter((p) => p.category === activeCategory);
+
+        const sorted = [...base].sort((a, b) => {
+            const aTime = new Date(a.created_at || 0).getTime();
+            const bTime = new Date(b.created_at || 0).getTime();
+            return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
+        });
+
+        return sorted;
+    }, [activeCategory, photos, sortOrder]);
+
+    async function loadPhotos() {
+        try {
+            setLoading(true);
+            const res = await fetch("/api/photos");
+            const data = await res.json();
+            setPhotos(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Fehler beim Laden:", err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function checkMe() {
+        try {
+            setAuthLoading(true);
+            const res = await fetch("/api/auth/me", { credentials: "include" });
+            const data = await res.json();
+            setIsAdminAuthed(!!data?.isAdmin);
+        } catch {
+            setIsAdminAuthed(false);
+        } finally {
+            setAuthLoading(false);
+        }
+    }
+
+    async function logout() {
+        try {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+        } finally {
+            setIsAdminAuthed(false);
+            navigate("/");
+        }
+    }
+
+    useEffect(() => {
+        loadPhotos();
+    }, []);
+
+    useEffect(() => {
+        checkMe();
+    }, []);
 
     return (
-        <div className="min-h-screen bg-white">
-            <Navbar
-                categories={categories}
-                activeCategory={activeCategory}
-                onSelectCategory={setActiveCategory}
+        <Routes>
+            {/* PUBLIC */}
+            <Route
+                path="/"
+                element={
+                    <PublicLayout
+                        categories={categories}
+                        activeCategory={activeCategory}
+                        onSelectCategory={setActiveCategory}
+                        isAdminAuthed={isAdminAuthed}
+                        onAdminClick={() => navigate("/admin")}
+                        onLogout={logout}
+                    >
+                        <div className="max-w-7xl mx-auto px-6 py-10 min-h-[40vh]">
+                            {loading ? (
+                                <div className="text-gray-500">Lade Fotos...</div>
+                            ) : filteredPhotos.length === 0 ? (
+                                <div className="rounded-2xl border bg-white p-8 text-center">
+                                    <div className="text-xl font-semibold">Keine Fotos gefunden</div>
+                                    <div className="text-gray-600 mt-2">
+                                        In der Kategorie <b>{activeCategory}</b> gibt es aktuell keine Bilder.
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveCategory("Alle")}
+                                        className="mt-6 rounded-lg bg-black px-5 py-2 text-white hover:bg-gray-900"
+                                    >
+                                        Zurück zu Alle
+                                    </button>
+                                </div>
+                            ) : (
+                                <GalleryGrid photos={filteredPhotos} onSelect={setSelected} />
+                            )}
+                        </div>
+
+                        {selected && <PhotoModal photo={selected} onClose={() => setSelected(null)} />}
+                    </PublicLayout>
+                }
             />
-            <Hero />
 
-            <div className="max-w-7xl mx-auto px-6 py-10">
-                <GalleryGrid photos={filteredPhotos} onSelect={setSelected} />
-            </div>
+            {/* ADMIN */}
+            <Route
+                path="/admin"
+                element={
+                    <AdminLayout
+                        isAdminAuthed={isAdminAuthed}
+                        onAdminClick={() => navigate("/admin")}
+                        onLogout={logout}
+                    >
+                        {authLoading ? (
+                            <div className="max-w-3xl mx-auto px-6 py-16 text-gray-500">
+                                Prüfe Login...
+                            </div>
+                        ) : isAdminAuthed ? (
+                            <AdminDashboard photos={photos} onReloadPhotos={loadPhotos} onLogout={logout} />
+                        ) : (
+                            <AdminLogin
+                                onLoginSuccess={async () => {
+                                    await checkMe();
+                                    await loadPhotos();
+                                    navigate("/admin");
+                                }}
+                            />
+                        )}
+                    </AdminLayout>
+                }
+            />
 
-            {selected && (
-                <PhotoModal photo={selected} onClose={() => setSelected(null)} />
-            )}
-
-            <Footer />
-        </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     );
 }

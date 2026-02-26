@@ -1,7 +1,12 @@
-const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+import sqlite3 from "sqlite3";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const db = new sqlite3.Database(path.join(__dirname, "data.sqlite"));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const dbPath = path.join(__dirname, "data.sqlite");
+const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
     db.run(`
@@ -9,11 +14,11 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
       category TEXT NOT NULL,
-      year TEXT NOT NULL,
+      year INTEGER,
       filename TEXT NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
 });
 
-module.exports = db;
+export default db;

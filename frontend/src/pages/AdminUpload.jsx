@@ -1,201 +1,181 @@
-import { useMemo, useState } from "react";
-
-const API_BASE = "http://localhost:3001";
+import { useEffect, useState } from "react";
 
 export default function AdminUpload() {
-    const categories = useMemo(
-        () => ["Natur", "Architektur", "Menschen", "Tiere", "Technik", "Kunst"],
-        []
-    );
-
-    const [adminKey, setAdminKey] = useState("ELVIS_ADMIN_2026");
+    const [adminKey, setAdminKey] = useState("");
     const [title, setTitle] = useState("");
     const [category, setCategory] = useState("Natur");
-    const [year, setYear] = useState(new Date().getFullYear().toString());
+    const [year, setYear] = useState("2026");
     const [file, setFile] = useState(null);
 
-    const [status, setStatus] = useState({ type: "idle", message: "" });
-    const [lastResult, setLastResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState("");
+    const [response, setResponse] = useState(null);
 
-    async function handleUpload(e) {
+    // ✅ AUTOMATISCHER REDIRECT NACH ERFOLG
+    useEffect(() => {
+        if (success) {
+            const t = setTimeout(() => {
+                window.location.href = "/";
+            }, 3000);
+
+            return () => clearTimeout(t);
+        }
+    }, [success]);
+
+    async function handleSubmit(e) {
         e.preventDefault();
+        setError("");
+        setSuccess(false);
+        setResponse(null);
 
         if (!file) {
-            setStatus({ type: "error", message: "Bitte ein Bild auswählen." });
+            setError("Bitte eine Bilddatei auswählen.");
             return;
         }
-        if (!title.trim()) {
-            setStatus({ type: "error", message: "Bitte einen Titel eingeben." });
-            return;
-        }
-        if (!adminKey.trim()) {
-            setStatus({ type: "error", message: "Admin-Key fehlt." });
-            return;
-        }
+
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("category", category);
+        formData.append("year", year);
+        formData.append("image", file);
 
         try {
-            setStatus({ type: "loading", message: "Upload läuft..." });
-            setLastResult(null);
+            setLoading(true);
 
-            const form = new FormData();
-            form.append("image", file); // muss zum Backend passen: upload.single("image")
-            form.append("title", title.trim());
-            form.append("category", category);
-            form.append("year", year);
-
-            const res = await fetch(`${API_BASE}/api/admin/upload`, {
+            const res = await fetch("http://localhost:3001/api/admin/upload", {
                 method: "POST",
                 headers: {
-                    "x-admin-key": adminKey.trim(),
+                    "x-admin-key": adminKey,
                 },
-                body: form,
+                body: formData,
             });
 
-            const data = await res.json().catch(() => ({}));
+            const data = await res.json();
 
             if (!res.ok) {
-                setStatus({
-                    type: "error",
-                    message: data?.error || `Upload fehlgeschlagen (HTTP ${res.status})`,
-                });
-                return;
+                throw new Error(data.error || "Upload fehlgeschlagen");
             }
 
-            setStatus({ type: "success", message: "✅ Upload erfolgreich!" });
-            setLastResult(data);
+            setSuccess(true);
+            setResponse(data);
 
-            // reset file input
-            setFile(null);
-            // Titel optional leeren:
+            // Formular optional zurücksetzen
             setTitle("");
+            setFile(null);
         } catch (err) {
-            setStatus({
-                type: "error",
-                message: `Fehler: ${err?.message || "Unbekannt"}`,
-            });
+            setError(err.message);
+        } finally {
+            setLoading(false);
         }
     }
 
     return (
-        <div className="max-w-3xl mx-auto px-6 py-10">
-            <h2 className="text-2xl font-bold text-gray-900">Admin Upload</h2>
-            <p className="text-gray-600 mt-2">
+        <div className="max-w-3xl mx-auto px-6 py-16">
+            <h1 className="text-3xl font-bold mb-2">Admin Upload</h1>
+            <p className="text-gray-600 mb-8">
                 Nur für den Fotografen: Bilder hochladen (geschützt via Admin-Key).
             </p>
 
             <form
-                onSubmit={handleUpload}
-                className="mt-6 rounded-2xl bg-white shadow-sm border p-6 space-y-5"
+                onSubmit={handleSubmit}
+                className="rounded-2xl border bg-white p-6 space-y-5"
             >
+                {/* Admin Key */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        Admin-Key
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Admin-Key</label>
                     <input
                         value={adminKey}
                         onChange={(e) => setAdminKey(e.target.value)}
-                        className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-                        placeholder="ELVIS_ADMIN_2026"
+                        className="w-full rounded-lg border px-3 py-2"
                     />
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                         Wird im Header <code>x-admin-key</code> gesendet.
                     </p>
                 </div>
 
+                {/* Titel */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Titel</label>
+                    <label className="block text-sm font-medium mb-1">Titel</label>
                     <input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
                         placeholder="z.B. Sonnenuntergang am See"
+                        className="w-full rounded-lg border px-3 py-2"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Kategorie + Jahr */}
+                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Kategorie
-                        </label>
+                        <label className="block text-sm font-medium mb-1">Kategorie</label>
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            className="mt-1 w-full rounded-xl border px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                            className="w-full rounded-lg border px-3 py-2"
                         >
-                            {categories.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
+                            <option>Natur</option>
+                            <option>Architektur</option>
+                            <option>Menschen</option>
+                            <option>Tiere</option>
+                            <option>Technik</option>
+                            <option>Kunst</option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Jahr</label>
+                        <label className="block text-sm font-medium mb-1">Jahr</label>
                         <input
                             value={year}
                             onChange={(e) => setYear(e.target.value)}
-                            className="mt-1 w-full rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-                            placeholder="2026"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Bilddatei
-                        </label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setFile(e.target.files?.[0] || null)}
-                            className="mt-2 block w-full text-sm"
+                            className="w-full rounded-lg border px-3 py-2"
                         />
                     </div>
                 </div>
 
+                {/* Datei */}
+                <div>
+                    <label className="block text-sm font-medium mb-1">Bilddatei</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setFile(e.target.files[0])}
+                    />
+                </div>
+
+                {/* Button */}
                 <button
                     type="submit"
-                    disabled={status.type === "loading"}
-                    className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-900 transition disabled:opacity-60"
+                    disabled={loading}
+                    className="rounded-lg bg-black px-6 py-3 text-white hover:bg-gray-800 disabled:opacity-50"
                 >
-                    {status.type === "loading" ? "Upload..." : "Upload starten"}
+                    {loading ? "Upload läuft..." : "Upload starten"}
                 </button>
 
-                {status.type !== "idle" && (
-                    <div
-                        className={`rounded-xl px-4 py-3 text-sm ${
-                            status.type === "success"
-                                ? "bg-green-50 text-green-800 border border-green-200"
-                                : status.type === "error"
-                                    ? "bg-red-50 text-red-800 border border-red-200"
-                                    : "bg-gray-50 text-gray-800 border"
-                        }`}
-                    >
-                        {status.message}
+                {/* Fehler */}
+                {error && (
+                    <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-red-700">
+                        {error}
                     </div>
                 )}
 
-                {lastResult && (
-                    <div className="rounded-xl border bg-gray-50 p-4 text-sm">
-                        <div className="font-semibold text-gray-900">Server Antwort:</div>
-                        <pre className="mt-2 overflow-auto">{JSON.stringify(lastResult, null, 2)}</pre>
-                        {lastResult?.filename && (
-                            <div className="mt-3">
-                                <a
-                                    className="underline"
-                                    href={`${API_BASE}/uploads/original/${lastResult.filename}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    Bild öffnen (original)
-                                </a>
-                            </div>
-                        )}
+                {/* Erfolg */}
+                {success && (
+                    <div className="rounded-lg border border-green-300 bg-green-50 p-3 text-green-700">
+                        ✅ Upload erfolgreich!
+                        <div className="text-sm mt-1">
+                            Du wirst in 3 Sekunden zur Galerie weitergeleitet…
+                        </div>
                     </div>
+                )}
+
+                {/* Server-Antwort */}
+                {response && (
+                    <pre className="mt-4 rounded-lg bg-gray-100 p-3 text-xs overflow-auto">
+            {JSON.stringify(response, null, 2)}
+          </pre>
                 )}
             </form>
         </div>
     );
 }
-
-

@@ -26,6 +26,9 @@ export default function PhotoCard({ photo, onClick }) {
                 <div className="text-sm text-gray-600">
                     {photo.category} · {photo.year}
                 </div>
+                <div className="text-xs text-gray-500 mt-1">
+                    {photo.created_at ? new Date(photo.created_at).toLocaleString() : ""}
+                </div>
             </div>
         </button>
     );
