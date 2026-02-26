@@ -2,15 +2,14 @@
 backend/node_modules/
 backend/uploads/
 backend/data.sqlite
+backend/sessions.sqlite
 
 # frontend
 frontend/node_modules/
 
-#Jetbrains
+# JetBrains
 .idea/
 
 # environment
 .env
-
 backend/.env
-
