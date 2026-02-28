@@ -6,10 +6,19 @@ backend/sessions.sqlite
 
 # frontend
 frontend/node_modules/
-
-# JetBrains
-.idea/
+frontend/dist/
 
 # environment
 .env
 backend/.env
+
+# JetBrains
+.idea/
+
+# logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
