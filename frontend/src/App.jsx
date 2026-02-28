@@ -31,24 +31,17 @@ export default function App() {
         []
     );
 
+    // Nur filtern – Sortierung kommt vom Backend bereits richtig rein
     const filteredPhotos = useMemo(() => {
-        const base = activeCategory === "Alle"
+        return activeCategory === "Alle"
             ? photos
             : photos.filter((p) => p.category === activeCategory);
-
-        const sorted = [...base].sort((a, b) => {
-            const aTime = new Date(a.created_at || 0).getTime();
-            const bTime = new Date(b.created_at || 0).getTime();
-            return sortOrder === "newest" ? bTime - aTime : aTime - bTime;
-        });
-
-        return sorted;
-    }, [activeCategory, photos, sortOrder]);
+    }, [activeCategory, photos]);
 
     async function loadPhotos() {
         try {
             setLoading(true);
-            const res = await fetch("/api/photos");
+            const res = await fetch(`/api/photos?sort=${encodeURIComponent(sortOrder)}`);
             const data = await res.json();
             setPhotos(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -80,9 +73,11 @@ export default function App() {
         }
     }
 
+    // Fotos laden – beim Start UND wenn sortOrder wechselt
     useEffect(() => {
         loadPhotos();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortOrder]);
 
     useEffect(() => {
         checkMe();
@@ -101,6 +96,11 @@ export default function App() {
                         isAdminAuthed={isAdminAuthed}
                         onAdminClick={() => navigate("/admin")}
                         onLogout={logout}
+                        sortOrder={sortOrder}
+                        onChangeSortOrder={(val) => {
+                            setSortOrder(val);
+                            setSelected(null); // optional: Modal schließen beim Sortwechsel
+                        }}
                     >
                         <div className="max-w-7xl mx-auto px-6 py-10 min-h-[40vh]">
                             {loading ? (

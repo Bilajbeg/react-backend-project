@@ -9,6 +9,8 @@ export default function PublicLayout({
                                          isAdminAuthed,
                                          onAdminClick,
                                          onLogout,
+                                         sortOrder,          // NEU
+                                         onChangeSortOrder,  // NEU
                                          children,
                                      }) {
     return (
@@ -24,6 +26,21 @@ export default function PublicLayout({
             />
 
             <Hero />
+
+            {/* Sort Filter (Public) */}
+            <div className="w-full px-6 mt-4">
+                <div className="max-w-7xl mx-auto flex items-center justify-end gap-2">
+                    <label className="text-sm text-gray-600">Sortieren:</label>
+                    <select
+                        value={sortOrder}
+                        onChange={(e) => onChangeSortOrder(e.target.value)}
+                        className="border rounded-md px-3 py-2 text-sm"
+                    >
+                        <option value="newest">Neueste zuerst</option>
+                        <option value="oldest">Älteste zuerst</option>
+                    </select>
+                </div>
+            </div>
 
             {/* wichtig: flex-1 + full width */}
             <main className="flex-1 w-full">{children}</main>

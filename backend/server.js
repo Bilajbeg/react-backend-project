@@ -197,7 +197,14 @@ app.get("/api/auth/me", (req, res) => {
 // API Routes
 // --------------------------------------------------
 app.get("/api/photos", (req, res) => {
-    db.all("SELECT * FROM photos ORDER BY id DESC", (err, rows) => {
+    const sort = String(req.query.sort || "newest").toLowerCase();
+
+    const order =
+        sort === "oldest"
+            ? "ORDER BY datetime(created_at) ASC, id ASC"
+            : "ORDER BY datetime(created_at) DESC, id DESC";
+
+    db.all(`SELECT * FROM photos ${order}`, (err, rows) => {
         if (err) return res.status(500).json({ error: "DB error" });
 
         const mapped = rows.map((r) => ({
@@ -215,6 +222,8 @@ app.post("/api/admin/upload", requireAdmin, upload.single("image"), (req, res) =
     if (!req.file) return res.status(400).json({ error: "Kein Bild hochgeladen" });
     if (!title || !category) return res.status(400).json({ error: "Titel & Kategorie erforderlich" });
 
+    const createdAt = new Date().toISOString();
+
     db.run(
         `INSERT INTO photos (title, category, year, filename, created_at) VALUES (?, ?, ?, ?, ?)`,
         [title, category, Number(year) || null, req.file.filename, createdAt],
@@ -225,9 +234,11 @@ app.post("/api/admin/upload", requireAdmin, upload.single("image"), (req, res) =
                 id: this.lastID,
                 title,
                 category,
-                year,
+                year: Number(year) || null,
                 filename: req.file.filename,
+                created_at: createdAt,
                 url_original: `/uploads/original/${req.file.filename}`,
+                src: `/uploads/original/${req.file.filename}`,
             });
         }
     );
@@ -245,7 +256,7 @@ app.patch("/api/admin/photos/:id", requireAdmin, (req, res) => {
         [title, category, Number(year) || null, id],
         function (err) {
             if (err) return res.status(500).json({ error: "DB error" });
-            res.json({ ok: true, id, title, category, year });
+            res.json({ ok: true, id, title, category, year: Number(year) || null });
         }
     );
 });
